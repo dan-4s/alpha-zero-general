@@ -29,7 +29,7 @@ class TicTacToeGame(Game):
 
     def getActionSize(self):
         # return number of actions
-        return self.n*self.n + 1
+        return self.n*self.n
 
     def getNextState(self, board, player, action):
         # if player takes action on board, return next (board,player)
@@ -76,8 +76,8 @@ class TicTacToeGame(Game):
 
     def getSymmetries(self, board, pi):
         # mirror, rotational
-        assert(len(pi) == self.n**2+1)  # 1 for pass
-        pi_board = np.reshape(pi[:-1], (self.n, self.n))
+        assert(len(pi) == self.n**2)  # 1 for pass
+        pi_board = np.reshape(pi, (self.n, self.n))
         l = []
 
         for i in range(1, 5):
@@ -87,7 +87,7 @@ class TicTacToeGame(Game):
                 if j:
                     newB = np.fliplr(newB)
                     newPi = np.fliplr(newPi)
-                l += [(newB, list(newPi.ravel()) + [pi[-1]])]
+                l += [(newB, list(newPi.ravel()))]
         return l
 
     def stringRepresentation(self, board):
