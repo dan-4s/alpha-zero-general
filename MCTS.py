@@ -25,6 +25,8 @@ class MCTS():
         self.Es = {}  # stores game.getGameEnded ended for board s
         self.Vs = {}  # stores game.getValidMoves for board s
 
+        self.num_searches = 0
+
     def getActionProb(self, canonicalBoard, temp=1):
         """
         This function performs numMCTSSims simulations of MCTS starting from
@@ -71,6 +73,7 @@ class MCTS():
         Returns:
             v: the negative of the value of the current canonicalBoard
         """
+        self.num_searches += 1
 
         s = self.game.stringRepresentation(canonicalBoard)
 

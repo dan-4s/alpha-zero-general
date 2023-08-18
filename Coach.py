@@ -28,6 +28,8 @@ class Coach():
         self.mcts = MCTS(self.game, self.nnet, self.args)
         self.trainExamplesHistory = []  # history of examples from args.numItersForTrainExamplesHistory latest iterations
         self.skipFirstSelfPlay = False  # can be overriden in loadTrainExamples()
+        self.num_accesses = 0
+        self.num_examples = 0
 
     def executeEpisode(self):
         """
@@ -86,7 +88,12 @@ class Coach():
 
                 for _ in tqdm(range(self.args.numEps), desc="Self Play"):
                     self.mcts = MCTS(self.game, self.nnet, self.args)  # reset search tree
-                    iterationTrainExamples += self.executeEpisode()
+                    new_examples = self.executeEpisode()
+                    self.num_examples += len(new_examples)
+                    iterationTrainExamples += new_examples
+                self.num_accesses += self.mcts.num_searches
+                log.info(f"TOTAL NUMBER OF ENVIRONMENT ACCESSES: {self.num_accesses}")
+                log.info(f"TOTAL NUMBER OF EXAMPLES: {self.num_examples}")
 
                 # save the iteration examples to the history 
                 self.trainExamplesHistory.append(iterationTrainExamples)
