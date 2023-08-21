@@ -4,6 +4,7 @@ import sys
 from collections import deque
 from pickle import Pickler, Unpickler
 from random import shuffle
+import time
 
 import numpy as np
 from tqdm import tqdm
@@ -30,6 +31,7 @@ class Coach():
         self.skipFirstSelfPlay = False  # can be overriden in loadTrainExamples()
         self.num_accesses = 0
         self.num_examples = 0
+        self.training_time = 0
 
     def executeEpisode(self):
         """
@@ -78,6 +80,8 @@ class Coach():
         It then pits the new neural network against the old one and accepts it
         only if it wins >= updateThreshold fraction of games.
         """
+        # Timing
+        start = time.time()
 
         for i in range(1, self.args.numIters + 1):
             # bookkeeping
@@ -92,8 +96,6 @@ class Coach():
                     self.num_examples += len(new_examples)
                     iterationTrainExamples += new_examples
                 self.num_accesses += self.mcts.num_searches
-                log.info(f"TOTAL NUMBER OF ENVIRONMENT ACCESSES: {self.num_accesses}")
-                log.info(f"TOTAL NUMBER OF EXAMPLES: {self.num_examples}")
 
                 # save the iteration examples to the history 
                 self.trainExamplesHistory.append(iterationTrainExamples)
@@ -113,11 +115,21 @@ class Coach():
             shuffle(trainExamples)
 
             # training new network, keeping a copy of the old one
-            self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
-            self.pnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
+            self.training_time = time.time() - start
+            net_name = f"alphazero_ttt_check_{i}.pth"
+            self.nnet.save_checkpoint(folder=self.args.checkpoint, filename=net_name,
+                                      num_examples=self.num_examples, num_accesses=self.num_accesses,
+                                      training_time=self.training_time)
+            self.pnet.load_checkpoint(folder=self.args.checkpoint, filename=net_name)
             pmcts = MCTS(self.game, self.pnet, self.args)
 
             self.nnet.train(trainExamples)
+
+            # Save again to get the correct values for performance tracking.
+            self.nnet.save_checkpoint(folder=self.args.checkpoint, filename=net_name,
+                                      num_examples=self.num_examples, num_accesses=self.num_accesses,
+                                      training_time=self.training_time)
+
             nmcts = MCTS(self.game, self.nnet, self.args)
 
             log.info('PITTING AGAINST PREVIOUS VERSION')
@@ -128,11 +140,16 @@ class Coach():
             log.info('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (nwins, pwins, draws))
             if pwins + nwins == 0 or float(nwins) / (pwins + nwins) < self.args.updateThreshold:
                 log.info('REJECTING NEW MODEL')
-                self.nnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
+                self.nnet.load_checkpoint(folder=self.args.checkpoint, filename=net_name)
             else:
                 log.info('ACCEPTING NEW MODEL')
                 self.nnet.save_checkpoint(folder=self.args.checkpoint, filename=self.getCheckpointFile(i))
                 self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='best.pth.tar')
+            self.training_time = time.time() - start
+            log.info(f"TOTAL NUMBER OF ENVIRONMENT ACCESSES: {self.num_accesses}")
+            log.info(f"TOTAL NUMBER OF EXAMPLES: {self.num_examples}")
+            log.info(f"TOTAL NUMBER OF STEPS {self.nnet.num_steps}")
+            log.info(f"TOTAL TRAINING TIME {self.training_time}")
 
     def getCheckpointFile(self, iteration):
         return 'checkpoint_' + str(iteration) + '.pth.tar'

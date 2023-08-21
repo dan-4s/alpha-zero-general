@@ -38,6 +38,7 @@ class NNetWrapper(NeuralNet):
         self.nnet = tnnet(game, args)
         self.board_x, self.board_y = game.getBoardSize()
         self.action_size = game.getActionSize()
+        self.num_steps = 0 # The number of weight updates, used for performance tracking
 
         if args.cuda:
             self.nnet.cuda()
@@ -83,6 +84,7 @@ class NNetWrapper(NeuralNet):
                 optimizer.zero_grad()
                 total_loss.backward()
                 optimizer.step()
+                self.num_steps += 1
 
     def predict(self, board):
         """
@@ -108,7 +110,8 @@ class NNetWrapper(NeuralNet):
     def loss_v(self, targets, outputs):
         return torch.sum((targets - outputs.view(-1)) ** 2) / targets.size()[0]
 
-    def save_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
+    def save_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar',
+                        num_examples=0, num_accesses=0, training_time=0.0):
         filepath = os.path.join(folder, filename)
         if not os.path.exists(folder):
             print("Checkpoint Directory does not exist! Making directory {}".format(folder))
@@ -116,7 +119,11 @@ class NNetWrapper(NeuralNet):
         else:
             print("Checkpoint Directory exists! ")
         torch.save({
-            'state_dict': self.nnet.state_dict(),
+            'state_dict'   : self.nnet.state_dict(),
+            'num_steps'    : self.num_steps,
+            'num_examples' : num_examples,
+            'num_accesses' : num_accesses,
+            'training_time': training_time,
         }, filepath)
 
     def load_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
