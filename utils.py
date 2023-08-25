@@ -18,5 +18,10 @@ class AverageMeter(object):
 
 
 class dotdict(dict):
+    # NOTE: Never use dotdicts, there are FAR better ways to get similar
+    # functionality with namespaces such as with dataclasses. You will not get
+    # the same stupid errors as you will with dotdicts!
+    def __getstate__(self):
+        return self
     def __getattr__(self, name):
         return self[name]
