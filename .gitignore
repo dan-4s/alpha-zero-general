@@ -12,3 +12,7 @@ checkpoints/
 .idea/
 
 *.pt
+
+model_download/*
+*.out
+*.sh
