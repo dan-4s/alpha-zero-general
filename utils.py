@@ -23,5 +23,7 @@ class dotdict(dict):
     # the same stupid errors as you will with dotdicts!
     def __getstate__(self):
         return self
+    def __setstate__(self, state):
+        self = state
     def __getattr__(self, name):
         return self[name]
