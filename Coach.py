@@ -116,7 +116,7 @@ class Coach():
 
             # training new network, keeping a copy of the old one
             self.training_time = time.time() - start
-            net_name = f"alphazero_ttt_check_{i}.pth"
+            net_name = f"alphazero_othello_check_{i}.pth"
             self.nnet.save_checkpoint(folder=self.args.checkpoint, filename=net_name,
                                       num_examples=self.num_examples, num_accesses=self.num_accesses,
                                       training_time=self.training_time)
