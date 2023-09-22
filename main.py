@@ -2,11 +2,17 @@ import logging
 
 import coloredlogs
 
-# For Othello
+# For Connect4
 from Coach import Coach
-from othello.OthelloGame import OthelloGame as Game
-from othello.pytorch.NNet import NNetWrapper as nn
+from connect4.Connect4Game import Connect4Game as Game
+from connect4.pytorch.NNet import NNetWrapper as nn
 from utils import *
+
+# For Othello
+# from Coach import Coach
+# from othello.OthelloGame import OthelloGame as Game
+# from othello.pytorch.NNet import NNetWrapper as nn
+# from utils import *
 
 # For Tic-Tac-Toe
 # from Coach import Coach
